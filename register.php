@@ -1,15 +1,16 @@
 <?php
+session_start();
+include('backend/auth.php');
+checkRole(['admin']);
+
 require 'backend/functions.php';
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $username = $_POST['username'];
     $password = $_POST['password'];
-    // $role = $_POST['role'];
-    $role = "admin";
-    // $nik = $_POST['nik'];
-    $nik = "12345";
-    // $bagian = $_POST['bagian'];
-    $bagian = "admin";
+    $role = $_POST['role'];
+    $nik = $_POST['nik'];
+    $bagian = $_POST['bagian'];
     $nama = $_POST['nama'];
 
     $result = register($username, $password, $role, $nik, $bagian, $nama);
@@ -55,11 +56,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             <a href="index.html">
                 <button type="submit" name="register" class="btn-input">Register</button>
             </a>
-            <div class="bottom">
+            <!-- <div class="bottom">
                 <p>Sudah punya akun?
                     <a href="index.html">Login disini</a>
                 </p>
-            </div>
+            </div> -->
         </form>
     </div>
 </body>

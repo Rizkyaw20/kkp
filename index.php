@@ -1,3 +1,11 @@
+<?php 
+session_start();
+
+if (!isset($_SESSION['username'])) {
+    header("Location: login.php");
+    exit;
+}
+?>
 <!doctype html>
 <html lang="en">
   <head>
@@ -77,7 +85,8 @@
             <div class="col">
               <div class="row">
                 <div class="box">
-                  <a href="https://forms.gle/Ys5uPVbEh2HUFv4Y8"> 
+                  <!-- <a href="https://forms.gle/Ys5uPVbEh2HUFv4Y8">  -->
+                  <a href="tip/index.php?tipe=pembaharuan">
                     <img src="img/agenda.png" alt="search">
                   </a>
               </div>
@@ -103,7 +112,8 @@
             <div class="col">
               <div class="row">
                 <div class="box" id="row2">
-                  <a href="https://forms.gle/bn2GEvo8Wqr9YwHm6">
+                  <!-- <a href="https://forms.gle/bn2GEvo8Wqr9YwHm6"> -->
+                  <a href="tip/index.php?tipe=pengembalian">
                     <img src="img/kantor.png" alt="phone">
                   </a>
                 </div>

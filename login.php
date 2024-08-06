@@ -1,4 +1,5 @@
 <?php
+session_start();
 require 'backend/functions.php';
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
@@ -7,7 +8,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     $result = login($username, $password);
     if ($result === true) {
-        header("Location: dashboard.php");
+        header("Location: index.php");
         exit;
     } else {
         echo $result;
@@ -40,11 +41,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 <input type="password" name="password" placeholder="Password">
             </div>
                 <button type="submit" name="login" class="btn-input">Login</button>
-            <div class="bottom">
+            <!-- <div class="bottom">
                 <p>Belum punya akun?
                     <a href="register.php">Register disini</a>
                 </p>
-            </div>
+            </div> -->
         </form>
     </div>
 </body>

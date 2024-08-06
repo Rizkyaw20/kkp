@@ -1,5 +1,5 @@
 <?php
-require 'config.php';
+require_once 'config.php';
 
 function register($username, $password, $role, $nik, $bagian, $nama) {
     global $conn;
@@ -43,6 +43,7 @@ function login($username, $password) {
             $_SESSION['nik'] = $nik;
             $_SESSION['bagian'] = $bagian;
             $_SESSION['nama'] = $nama;
+            $_SESSION['user_role'] = $role;
             return true;
         } else {
             return "Invalid password.";
@@ -54,12 +55,22 @@ function login($username, $password) {
     $stmt->close();
 }
 
-// Create tip
-function create_tip($bagian_id, $line_id, $jumlah_tip_id, $grup_id, $waktu_pembaruan, $tanggal) {
+// read user
+function read_users($sort_order){
     global $conn;
 
-    $stmt = $conn->prepare("INSERT INTO manajemen_tip (bagian_id, line_id, jumlah_tip_id, grup_id, waktu_pembaruan, tanggal) VALUES (?, ?, ?, ?, ?, ?)");
-    $stmt->bind_param("iiiiss", $bagian_id, $line_id, $jumlah_tip_id, $grup_id, $waktu_pembaruan, $tanggal);
+    $sql = "SELECT * FROM users";
+    $result = $conn->query($sql);
+
+    return $result;
+}
+
+// Create tip
+function create_tip($bagian_id, $line_id, $jumlah_tip_id, $grup_id, $tipe, $waktu_pembaruan = null, $waktu_pengembalian = null, $tanggal) {
+    global $conn;
+
+    $stmt = $conn->prepare("INSERT INTO manajemen_tip (bagian_id, line_id, jumlah_tip_id, grup_id, tipe, waktu_pembaruan, waktu_pengembalian, tanggal) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+    $stmt->bind_param("iiiissss", $bagian_id, $line_id, $jumlah_tip_id, $grup_id, $tipe, $waktu_pembaruan, $waktu_pengembalian, $tanggal);
 
     if ($stmt->execute()) {
         return "Tip created successfully.";
@@ -71,21 +82,73 @@ function create_tip($bagian_id, $line_id, $jumlah_tip_id, $grup_id, $waktu_pemba
 }
 
 // Read tips
-function read_tips() {
+function read_tips($tipe = null, $sort_order = 'ASC', $filter_date = null) {
     global $conn;
 
-    $sql = "SELECT * FROM manajemen_tip";
-    $result = $conn->query($sql);
+    $valid_types = ["pembaruan", "pengembalian"];
+    if ($tipe !== null && !in_array($tipe, $valid_types)) {
+        return false;
+    }
 
-    return $result;
+    $sql = "
+        SELECT 
+            mt.*, 
+            b.name AS bagian_name, 
+            l.name AS line_name, 
+            j.name AS jumlah_tip_name, 
+            g.name AS grup_name
+        FROM 
+            manajemen_tip mt
+        LEFT JOIN 
+            Bagian b ON mt.bagian_id = b.id
+        LEFT JOIN 
+            Line l ON mt.line_id = l.id
+        LEFT JOIN 
+            jumlah_tip j ON mt.jumlah_tip_id = j.id
+        LEFT JOIN 
+            Grup g ON mt.grup_id = g.id
+    ";
+
+    $params = [];
+    $whereClause = [];
+
+    if ($filter_date) {
+        $whereClause[] = "mt.tanggal = ?";
+        $params[] = $filter_date;
+    }
+
+    if ($tipe) {
+        $whereClause[] = "mt.tipe = ?";
+        $params[] = $tipe;
+    }
+
+    if (!empty($whereClause)) {
+        $sql .= " WHERE " . implode(" AND ", $whereClause);
+    }
+
+    $sql .= " ORDER BY mt.tanggal $sort_order";
+
+    // Prepare and execute statement
+    if ($stmt = $conn->prepare($sql)) {
+        if (!empty($params)) {
+            $types = str_repeat('s', count($params)); // 's' for string type
+            $stmt->bind_param($types, ...$params);
+        }
+        $stmt->execute();
+        return $stmt->get_result();
+    } else {
+        // Log error in a real application
+        error_log("Error preparing statement: " . $conn->error);
+        return false;
+    }
 }
 
 // Update tip
-function update_tip($id, $bagian_id, $line_id, $jumlah_tip_id, $grup_id, $waktu_pembaruan, $tanggal) {
+function update_tip($id, $bagian_id, $line_id, $jumlah_tip_id, $grup_id, $tipe, $waktu_pembaruan = null, $waktu_pengembalian = null, $tanggal) {
     global $conn;
 
-    $stmt = $conn->prepare("UPDATE manajemen_tip SET bagian_id = ?, line_id = ?, jumlah_tip_id = ?, grup_id = ?, waktu_pembaruan = ?, tanggal = ? WHERE id = ?");
-    $stmt->bind_param("iiiissi", $bagian_id, $line_id, $jumlah_tip_id, $grup_id, $waktu_pembaruan, $tanggal, $id);
+    $stmt = $conn->prepare("UPDATE manajemen_tip SET bagian_id = ?, line_id = ?, jumlah_tip_id = ?, grup_id = ?, tipe = ?, waktu_pembaruan = ?, waktu_pengembalian = ?, tanggal = ? WHERE id = ?");
+    $stmt->bind_param("iiiissssi", $bagian_id, $line_id, $jumlah_tip_id, $grup_id, $tipe, $waktu_pembaruan, $waktu_pengembalian, $tanggal, $id);
 
     if ($stmt->execute()) {
         return "Tip updated successfully.";
