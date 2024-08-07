@@ -1,5 +1,5 @@
 <?php
-$servername = "localhost:3376";
+$servername = "localhost";
 $username = "root";
 $password = "";
 $dbname = "kkp";
